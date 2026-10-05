@@ -30,7 +30,7 @@ Now, after the second lecture, your directory tree should look like:
 ## Students
 
 | Name | Directory |
-|--|--|
+| Iván Pérez Montesinos | pmi |
 | Name Surname Surname| ssn |
 
 ---
