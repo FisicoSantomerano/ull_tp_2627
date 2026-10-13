@@ -1,5 +1,5 @@
 \input{../common}
-\subtitle{Lecture 6: Derived Types and Custom Operators}
+\subtitle{Lecture 6: Derived Types, Linked Lists, and Custom Operators}
 
 \begin{document}
 
@@ -70,42 +70,21 @@
     \column{0.48\textwidth}
 \begin{lstlisting}[language=Fortran]
 type(vector3d) :: pt1
-type(sphere) :: p, ball
+type(sphere) :: s, ball
 
 ! component by component
 pt1%x = 1.0
-p%radius = 3.0
-p%centre%x = 1.0
+s%radius = 3.0
+s%centre%x = 1.0
 
 ! whole object with constructors
 pt1 = vector3d(1.0, 2.0, 3.0)
-p%centre = vector3d(1.0, 2.0, 3.0)
-p = sphere(p%centre, 10.0)
-p = sphere(vector3d(1.0, 2.0, 3.0), 10.0)
+s%centre = vector3d(1.0, 2.0, 3.0)
+s = sphere(s%centre, 10.0)
+s = sphere(vector3d(1.0, 2.0, 3.0), 10.0)
 
 ! intrinsic assignment between objects
-ball = p
-\end{lstlisting}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]{Derived type I/O}
-  \begin{columns}[T]
-    \column{0.52\textwidth}
-    \begin{block}{List-directed I/O}
-      \begin{itemize}
-        \item A derived type can be printed and read with \texttt{print *} and \texttt{read *} if it has no pointer or allocatable components.
-        \item I/O proceeds component-by-component in order.
-      \end{itemize}
-      The two statements on the right print the same values.
-    \end{block}
-
-    \column{0.48\textwidth}
-\begin{lstlisting}[language=Fortran]
-print *, p
-
-print *, p%centre%x, p%centre%y, &
-         p%centre%z, p%radius
+ball = s
 \end{lstlisting}
   \end{columns}
 \end{frame}
@@ -123,12 +102,17 @@ print *, p%centre%x, p%centre%y, &
 
     \begin{column}{0.55\textwidth}
       \begin{lstlisting}
-program components
+module spectra
   implicit none
   type :: spectrum
     character(len=:), allocatable :: name
     real, allocatable :: flux(:)
   end type spectrum
+end module spectra
+
+program components
+  use spectra
+  implicit none
   type(spectrum) :: a, b
   a = spectrum('Vega', [1.0, 2.0, 3.0])
   b = a                  ! deep copy
@@ -138,6 +122,27 @@ program components
 end program components
       \end{lstlisting}
     \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Derived type I/O}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+    \begin{block}{List-directed I/O}
+      \begin{itemize}
+        \item A derived type can be printed and read with \texttt{print *} and \texttt{read *} if it has no pointer or allocatable components.
+        \item I/O proceeds component-by-component in order.
+      \end{itemize}
+      The two statements on the right print the same values.
+    \end{block}
+
+    \column{0.48\textwidth}
+\begin{lstlisting}[language=Fortran]
+print *, s
+
+print *, s%centre%x, s%centre%y, &
+         s%centre%z, s%radius
+\end{lstlisting}
   \end{columns}
 \end{frame}
 
@@ -156,6 +161,13 @@ end program components
   \node[llnext, #1, anchor=west] (#2n) at (#2v.east) {};
   \fill (#2n.center) circle (1.3pt);
 }
+
+\section{Linked Lists}
+
+\begin{frame}
+	\centering
+	\Huge \textbf{Linked Lists}
+\end{frame}
 
 \begin{frame}[fragile]{Linked lists}
   \centering
@@ -234,7 +246,7 @@ end program components
     \begin{column}{0.52\textwidth}
       \begin{itemize}
         \item To insert a cell after the one \texttt{cur} points to, allocate it and change two pointers.
-        \item The order matters. Step 1 copies the link to the rest of the list into the new cell before step 2 overwrites it. In the other order, that link is lost: a memory leak.
+        \item The order matters: step 1 saves the link to the rest of the list before step 2 overwrites it. In the other order, the new cell points to itself: the rest of the list is leaked, and a walk never ends.
         \item No other cell is touched or moved, however long the list is.
       \end{itemize}
       \lstinputlisting[firstline=25,lastline=29]{linked_list.f90}
@@ -298,9 +310,9 @@ end program components
     \begin{column}{0.48\textwidth}
       \centering
       \begin{tikzpicture}
-        % Step 1: the list bypasses the cell
+        % Steps 1 and 2: old points to the cell, and the list bypasses it
         \begin{scope}
-          \node[font=\scriptsize\bfseries, anchor=west] at (-0.5,1.25) {1.\ \texttt{cur\%next => old\%next}};
+          \node[font=\scriptsize\bfseries, anchor=west] at (-0.5,1.25) {1.\ \texttt{old => cur\%next}\quad 2.\ \texttt{cur\%next => old\%next}};
           \llcell{a}{0,0}{1}
           \llcell{b}{3.2,0}{2}
           \llcell[fill=red!20]{o}{1.6,-0.95}{5}
@@ -313,9 +325,9 @@ end program components
           \draw[llptr] (bn.center) -- ++(0.8,0) node[right, llvar] {...};
           \draw[llptr, red] (an.center) -- (bv.west);
         \end{scope}
-        % Step 2: the cell is freed
+        % Step 3: the cell is freed
         \begin{scope}[yshift=-3.1cm]
-          \node[font=\scriptsize\bfseries, anchor=west] at (-0.5,1.25) {2.\ \texttt{deallocate(old)}};
+          \node[font=\scriptsize\bfseries, anchor=west] at (-0.5,1.25) {3.\ \texttt{deallocate(old)}};
           \llcell{a}{0,0}{1}
           \llcell{b}{3.2,0}{2}
           \llcell[fill=white, dashed, draw=gray!60, text=gray!60]{o}{1.6,-0.95}{5}
@@ -331,7 +343,7 @@ end program components
     \begin{column}{0.52\textwidth}
       \begin{itemize}
         \item Keep a pointer to the cell (\texttt{old}), let the list bypass it, and then free it.
-        \item Without \texttt{old}, nothing would point to the cell after step 1: a memory leak.
+        \item Without \texttt{old}, nothing would point to the cell after step 2: a memory leak.
         \item To free a whole list, remove the first cell until \texttt{head} is null.
       \end{itemize}
       \lstinputlisting[firstline=40,lastline=42,belowskip=0pt]{linked_list.f90}
@@ -339,87 +351,6 @@ end program components
     \end{column}
   \end{columns}
 \end{frame}
-
-
-% \begin{frame}[fragile]{Pointers and recursive data structures}
-%   \begin{columns}[T]
-%     \column{0.52\textwidth}
-%     \begin{block}{Linked lists via pointers}
-%       \begin{itemize}
-%         \item Derived types with pointer components support lists/trees.
-%         \item Note subtle assignment semantics with pointer components:
-%       \end{itemize}
-% \begin{lstlisting}[language=Fortran]
-% type(cell)        :: a
-% type(cell),target :: b
-% a = b
-% ! equivalent to:
-% ! a%val  = b%val
-% ! a%next => b%next
-% \end{lstlisting}
-%       The pointer component is pointer-assigned (\texttt{=>}), not value-copied.
-%     \end{block}
-%
-%     \column{0.48\textwidth}
-% \begin{lstlisting}[language=Fortran]
-% type cell
-%   integer :: val
-%   type(cell), pointer :: next
-% end type cell
-% \end{lstlisting}
-%   \end{columns}
-% \end{frame}
-%
-% \begin{frame}[fragile]{Linked list: construction}
-%   \begin{columns}[T]
-%     \column{0.52\textwidth}
-%     \begin{block}{Idea}
-%       Build a list with a \texttt{head} node, appending values read from input until termination. Pointers avoid copying and give O(1) append by keeping a tail pointer.
-%     \end{block}
-%
-%     \column{0.48\textwidth}
-% \begin{lstlisting}[language=Fortran]
-% program thingy
-%   implicit none
-%   type(cell), target  :: head
-%   type(cell), pointer :: curr, temp
-%   integer :: k
-%
-%   head%val = 0
-%   nullify(head%next)
-%   curr => head
-%   do
-%     read*, k
-%     allocate(temp)
-%     temp%val = k
-%     nullify(temp%next)
-%     curr%next => temp
-%     curr => temp
-%   end do
-% end program thingy
-% \end{lstlisting}
-%   \end{columns}
-% \end{frame}
-%
-% \begin{frame}[fragile]{Linked list: traversal}
-%   \begin{columns}[T]
-%     \column{0.52\textwidth}
-%     \begin{block}{Walk-through}
-%       Traverse from \texttt{head} to the end by following \texttt{next}. Stop when \texttt{next} is disassociated.
-%     \end{block}
-%
-%     \column{0.48\textwidth}
-% \begin{lstlisting}[language=Fortran]
-% curr => head
-% do
-%   print *, curr%val
-%   if (.not. associated(curr%next)) exit
-%   curr => curr%next
-% end do
-% \end{lstlisting}
-%   \end{columns}
-% \end{frame}
-
 
 
 \begin{frame}[fragile]{Arrays of pointers}
@@ -436,16 +367,23 @@ end program components
 
     \column{0.48\textwidth}
 \begin{lstlisting}[language=Fortran]
-type iptr
-  integer, pointer :: compon => null()
-end type iptr
+module pointers
+  implicit none
+  type :: iptr
+    integer, pointer :: compon => null()
+  end type iptr
+end module pointers
 
-type(iptr), dimension(100) :: ints
-integer, target :: k = 5
+program pointer_array
+  use pointers
+  implicit none
+  type(iptr), dimension(100) :: ints
+  integer, target :: k = 5
 
-ints(10)%compon => k        ! ok
-print *, ints(10)%compon    ! ok: 5
-! print *, ints(:)%compon   ! not allowed
+  ints(10)%compon => k        ! ok
+  print *, ints(10)%compon    ! ok: 5
+  ! print *, ints(:)%compon   ! not allowed
+end program pointer_array
 \end{lstlisting}
   \end{columns}
 \end{frame}
@@ -466,6 +404,7 @@ print *, ints(10)%compon    ! ok: 5
         \item Fortran allows you to define complex derived types.
         \item But using them directly for calculations leads to cumbersome code (and bugs, lots and lots of bugs).
         \item Here \texttt{c = s*a + b} has to be written out component by component.
+        \item The examples in this section use a 2D vector to keep the code short.
       \end{itemize}
     \end{column}
 
@@ -506,14 +445,14 @@ print *, ints(10)%compon    ! ok: 5
 
 
 \begin{frame}[fragile]
-  \frametitle{How to Define a Custom Operator}
-  Custom operators are defined inside a module with an \texttt{interface operator} block.
+  \frametitle{How to define a custom operator}
+  Custom operators are defined with an \texttt{interface operator} block, which should be placed in a module.
   \vspace*{2mm}
 
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \begin{itemize}
-            \item Standard operators (+, -, *, /)
+            \item A standard operator (\texttt{+}, \texttt{*}, \texttt{==}, \ldots)
       \end{itemize}
 \begin{lstlisting}
 interface operator(+)
@@ -545,9 +484,9 @@ end interface
     \begin{column}{0.48\textwidth}
       \begin{itemize}
         \item An operator function takes one argument (unary) or two (binary), all \texttt{intent(in)}.
-        \item You can extend \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} to your own types, but you cannot change what they do for the intrinsic types.
+        \item You can extend the standard operators to your own types, but you cannot change what they do for the intrinsic types.
         \item Extended standard operators keep their usual precedence, so \texttt{s*a + b} works as expected.
-        \item A named operator such as \texttt{.dot.} has the lowest precedence of all. Use parentheses.
+        \item A named binary operator such as \texttt{.dot.} has the lowest precedence of all (a named unary operator has the highest). Use parentheses.
       \end{itemize}
     \end{column}
 
