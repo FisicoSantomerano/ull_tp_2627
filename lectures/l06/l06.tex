@@ -33,6 +33,7 @@
   \begin{itemize}
   \item Variables are declared with \texttt{type(name)}.
   \item A value is built with a constructor, which takes the components in the order of their definition.
+  \item Components can also be given by name: \texttt{vector3d(x=0.0, y=1.0, z=0.0)}.
   \end{itemize}
 
 \end{columns}
@@ -51,6 +52,9 @@
     \lstinputlisting[firstline=14,lastline=20,basicstyle=\ttfamily\scriptsize]{ex_types_2.f90}
   \end{block}
   \end{columns}
+
+  \vspace{0.5em}
+  A component can also have a default value, and a constructor may then leave it out. If \texttt{sphere} declared \texttt{real :: radius = 1.0}, then \texttt{sphere(vector3d(0.0, 1.0, 0.0))} would be a sphere of radius 1.
 \end{frame}
 
 
@@ -125,15 +129,50 @@ end program components
   \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]{Arrays of pointers}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+    \begin{block}{Notes}
+      \begin{itemize}
+        \item Fortran has no arrays of pointers: \texttt{real, pointer :: p(:)} is one pointer to an array.
+        \item To get an array of pointers, wrap a pointer in a derived type and make an array of that type.
+        \item You cannot reference the pointer component of the whole array in one go.
+        \item If desired, the container array could be \texttt{allocatable}.
+      \end{itemize}
+    \end{block}
+
+    \column{0.48\textwidth}
+\begin{lstlisting}[language=Fortran]
+module pointers
+  implicit none
+  type :: iptr
+    integer, pointer :: compon => null()
+  end type iptr
+end module pointers
+
+program pointer_array
+  use pointers
+  implicit none
+  type(iptr), dimension(100) :: ints
+  integer, target :: k = 5
+
+  ints(10)%compon => k        ! ok
+  print *, ints(10)%compon    ! ok: 5
+  ! print *, ints(:)%compon   ! not allowed
+end program pointer_array
+\end{lstlisting}
+  \end{columns}
+\end{frame}
+
 \begin{frame}[fragile]{Derived type I/O}
   \begin{columns}[T]
     \column{0.52\textwidth}
     \begin{block}{List-directed I/O}
       \begin{itemize}
-        \item A derived type can be printed and read with \texttt{print *} and \texttt{read *} if it has no pointer or allocatable components.
+        \item A derived type can be printed and read with \texttt{print *} and \texttt{read *} if it has no pointer or allocatable components (unless you write your own I/O procedure for it).
         \item I/O proceeds component-by-component in order.
       \end{itemize}
-      The two statements on the right print the same values.
+      For the sphere \texttt{s}, the two statements on the right print the same values.
     \end{block}
 
     \column{0.48\textwidth}
@@ -199,10 +238,75 @@ print *, s%centre%x, s%centre%y, &
 
     \begin{column}{0.5\textwidth}
       \lstinputlisting[firstline=3,lastline=6]{linked_list.f90}
-      Adding cells at the front builds the list above:
-      \lstinputlisting[firstline=17,lastline=22]{linked_list.f90}
+      A type may contain a \emph{pointer} to its own type, which is what makes the chain possible.
     \end{column}
   \end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{Linked lists: building a list}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+        % One row per stage. The new cell is green and its new pointer is red.
+        \node[llvar] at (0.3,0.5) {head};
+        % start: the list is empty
+        \node[llvar, anchor=east] at (-0.05,0) {start};
+        \node[llnext] (h0) at (0.3,0) {};
+        \fill (h0.center) circle (1.3pt);
+        \node[llvar, anchor=west] (z0) at (0.85,0) {null()};
+        \draw[llptr] (h0.center) -- (z0.west);
+        % i = 3
+        \begin{scope}[yshift=-0.95cm]
+          \node[llvar, anchor=east] at (-0.05,0) {i = 3};
+          \node[llnext] (h) at (0.3,0) {};
+          \fill (h.center) circle (1.3pt);
+          \llcell[fill=green!25]{a}{1.1,0}{3}
+          \node[llvar, anchor=west] (z) at (2.25,0) {null()};
+          \draw[llptr] (h.center) -- (av.west);
+          \draw[llptr, red] (an.center) -- (z.west);
+        \end{scope}
+        % i = 2
+        \begin{scope}[yshift=-1.9cm]
+          \node[llvar, anchor=east] at (-0.05,0) {i = 2};
+          \node[llnext] (h) at (0.3,0) {};
+          \fill (h.center) circle (1.3pt);
+          \llcell[fill=green!25]{a}{1.1,0}{2}
+          \llcell{b}{2.6,0}{3}
+          \node[llvar, anchor=west] (z) at (3.75,0) {null()};
+          \draw[llptr] (h.center) -- (av.west);
+          \draw[llptr, red] (an.center) -- (bv.west);
+          \draw[llptr] (bn.center) -- (z.west);
+        \end{scope}
+        % i = 1
+        \begin{scope}[yshift=-2.85cm]
+          \node[llvar, anchor=east] at (-0.05,0) {i = 1};
+          \node[llnext] (h) at (0.3,0) {};
+          \fill (h.center) circle (1.3pt);
+          \llcell[fill=green!25]{a}{1.1,0}{1}
+          \llcell{b}{2.6,0}{2}
+          \llcell{c}{4.1,0}{3}
+          \node[llvar, anchor=west] (z) at (5.25,0) {null()};
+          \draw[llptr] (h.center) -- (av.west);
+          \draw[llptr, red] (an.center) -- (bv.west);
+          \draw[llptr] (bn.center) -- (cv.west);
+          \draw[llptr] (cn.center) -- (z.west);
+        \end{scope}
+      \end{tikzpicture}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \lstinputlisting[firstline=12,lastline=22]{linked_list.f90}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item \texttt{head} starts as \texttt{null()}, so the list is empty.
+    \item Each new cell first points to the old first cell (red), and then \texttt{head} moves to the new cell.
+    \item So the first cell added, 3, inherits the \texttt{null()} that \texttt{head} started with, and stays at the end.
+  \end{itemize}
 \end{frame}
 
 
@@ -346,45 +450,9 @@ print *, s%centre%x, s%centre%y, &
         \item Without \texttt{old}, nothing would point to the cell after step 2: a memory leak.
         \item To free a whole list, remove the first cell until \texttt{head} is null.
       \end{itemize}
-      \lstinputlisting[firstline=40,lastline=42,belowskip=0pt]{linked_list.f90}
+      \lstinputlisting[firstline=39,lastline=42,belowskip=0pt]{linked_list.f90}
       \lstinputlisting[firstline=45,lastline=49,aboveskip=4pt]{linked_list.f90}
     \end{column}
-  \end{columns}
-\end{frame}
-
-
-\begin{frame}[fragile]{Arrays of pointers}
-  \begin{columns}[T]
-    \column{0.52\textwidth}
-    \begin{block}{Notes}
-      \begin{itemize}
-        \item Fortran has no arrays of pointers: \texttt{real, pointer :: p(:)} is one pointer to an array.
-        \item To get an array of pointers, wrap a pointer in a derived type and make an array of that type.
-        \item You cannot reference the pointer component of the whole array in one go.
-        \item If desired, the container array could be \texttt{allocatable}.
-      \end{itemize}
-    \end{block}
-
-    \column{0.48\textwidth}
-\begin{lstlisting}[language=Fortran]
-module pointers
-  implicit none
-  type :: iptr
-    integer, pointer :: compon => null()
-  end type iptr
-end module pointers
-
-program pointer_array
-  use pointers
-  implicit none
-  type(iptr), dimension(100) :: ints
-  integer, target :: k = 5
-
-  ints(10)%compon => k        ! ok
-  print *, ints(10)%compon    ! ok: 5
-  ! print *, ints(:)%compon   ! not allowed
-end program pointer_array
-\end{lstlisting}
   \end{columns}
 \end{frame}
 
@@ -456,18 +524,18 @@ end program pointer_array
       \end{itemize}
 \begin{lstlisting}
 interface operator(+)
-   module procedure newsum
+   module procedure sumvv
 end interface
 \end{lstlisting}
     \end{column}
 
     \begin{column}{0.5\textwidth}
       \begin{itemize}
-            \item A new operator named \texttt{.op.}
+            \item A new named operator, such as \texttt{.dot.}
       \end{itemize}
 \begin{lstlisting}
-interface operator(.op.)
-   module procedure newop
+interface operator(.dot.)
+   module procedure dotvv
 end interface
 \end{lstlisting}
     \end{column}
@@ -520,7 +588,7 @@ end interface
       \item Add the named operators \texttt{.dot.} and \texttt{.cross.} for the scalar and vector products.
       \item Test them: compute \mbox{\texttt{c = a .cross. b}} for two vectors of your choice, and check that \mbox{\texttt{c .dot. a}} and \mbox{\texttt{c .dot. b}} are both zero.
       \item What does \mbox{\texttt{2.0 * a .dot. b}} compute? And \mbox{\texttt{1.0 + a .dot. b}}? Explain both.
-      \item Make all the operator functions \texttt{pure}. Why is that a sensible default?
+      \item Make the operator functions \texttt{elemental}. What can you now do with an array of vectors?
     \end{enumerate}
   \end{block}
 \end{frame}
