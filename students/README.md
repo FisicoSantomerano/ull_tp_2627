@@ -30,7 +30,7 @@ Now, after the second lecture, your directory tree should look like:
 
 | Name | Directory |
 | Iván Pérez Montesinos | pmi |
-| Carlos Manuel García Montalván | cmgm |
+| Carlos Manuel García Montalván | gmcm |
 | Miguel Barchín Rubio | brm       |
 | Jorge Faci Descartín | fdj       |
 | Julio Garcia Piñeiro | gpj       |
