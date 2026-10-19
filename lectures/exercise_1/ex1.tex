@@ -416,7 +416,7 @@ end do
     \item Create a module \texttt{geometry} in the file \texttt{geometry.f90} that contains:
       \begin{itemize}
         \item the types \texttt{vector3d} and \texttt{point3d}, both with 64-bit real components \texttt{x}, \texttt{y}, and \texttt{z},
-        \item the functions \texttt{sumvp}, \texttt{sumpv}, \texttt{subvp}, \texttt{subpv}, \texttt{mulrv}, \texttt{mulvr}, and \texttt{divvr} for adding and subtracting points and vectors, and for multiplying and dividing vectors by reals,
+        \item the functions \texttt{sumvp}, \texttt{sumpv}, \texttt{subpv}, \texttt{subpp}, \texttt{mulrv}, \texttt{mulvr}, and \texttt{divvr} for adding a vector to a point, subtracting a vector from a point (a point) or a point from a point (a vector), and multiplying and dividing vectors by reals,
         \item operators that match these functions,
         \item a function \texttt{distance} that returns the distance between two points.
       \end{itemize}
