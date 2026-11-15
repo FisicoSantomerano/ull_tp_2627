@@ -61,6 +61,9 @@ program Exercise_1
 
 !  Initialize the accelerations as zero
   a(:) = vector3d(0.0, 0.0, 0.0)
+  
+  !$omp parallel private(rji, r2, r3)
+  !$omp do reduction(+:a)
   do i = 1, n
      do j = i+1, n
         rji = particles(j)%p - particles(i)%p
@@ -70,7 +73,9 @@ program Exercise_1
         a(j) = a(j) - rji * (particles(i)%m / r3)
      end do
   end do
-
+  !$omp end do
+  !$omp end parallel
+    
 !  Start measuring time for the heavier part of the code
   call system_clock(count_rate=rate)
   call system_clock(count=t_0)
