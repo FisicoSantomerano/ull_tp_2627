@@ -112,6 +112,5 @@ program Exercise_1
   print '(A, ES8.2, A)', 'This program took ', run_time, ' seconds to run'
   print*, ''
   print*, ''
-!~   call execute_command_line('python3 plot_orbits.py output.dat -o orbits.png')
 
 end program
