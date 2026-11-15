@@ -1,12 +1,13 @@
-Makefile has various aspects.
-Variables:
+# Makefile has various aspects.
+
+## Variables
 
 - ENV: not mandatory, but a venv shall be useful for visualization through plot_orbits.py.
 - INPUT: this is the name of the input file. By default, it will be input.dat.
 - IMAGE: name of the image created by the python script
 
 
-Commands:
+## Commands
 
 - make: this will compile with -fopenmp -O2 by default.
 - make plot: this will plot the orbits followed by the particles in output.dat.
@@ -14,14 +15,16 @@ Commands:
 - make clean: actually unlikely to be useful. It will delete everything that was just a requirement for compiling the main program (which is already done by every other command), but is actually useful when an error ocurs.
 
 
+## Parallelisation
+
 We can assign the number of threads (for example, 4) in case we run directly with make as
 
-OMP_NUM_THREADS=4 make everything
+- OMP_NUM_THREADS=4 make everything
 
 
 And we can change flags, to compile without fopenmp (or whatever other purposes) like
 
-make everything FLAGS="-O2"
+- make everything FLAGS="-O2"
 
 
 
