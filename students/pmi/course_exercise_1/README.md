@@ -1,3 +1,10 @@
+# Main code: ex1
+
+The main code is just a light modification of the original leapfrog.f90 given by professor. I just changed real to double precision reals, introduced the types particle3d, vector3d and point3d for 3-D variables, and parallelised the loop for calculation accelerations. It also calculates and prints on console the time taken by the main process of the simulation: the time evolution; and writes the positions as they evolve on output.dat.
+
+There are several ways to use this program, the main ones being automated and explained on the makefile.
+
+
 # Makefile
 
 ## Commands
@@ -11,7 +18,8 @@
 
 - ENV: not mandatory, but a venv shall be useful for visualization through plot_orbits.py.
 - INPUT: this is the name of the input file. By default, it will be input.dat.
-- IMAGE: name of the image created by the python script
+- RESULTS: the name of the file to be plotted. By default 'output.dat', but can be changed when giving the make commands as RESULTS="whatever".
+- IMAGE: name of the image created by the python script.
 
 
 ## Parallelisation
@@ -30,7 +38,7 @@ And we can change flags, to compile without fopenmp (or whatever other purposes)
 
 # Results
 
-Seed used for the random_sphere: 111111111.
+The seed I used for random_sphere.f90 is 111111111. This program creates random initial conditions of n particles within a sphere. Then, I saved the time it took for each simulation to run, using 1000, 2000, 5000 and 10000 particles, all with 1, 2, 4 and 8 threads for parallelisation. Results are shown in the following two-way table:
 
 ### Run time in seconds
 
@@ -41,7 +49,7 @@ Seed used for the random_sphere: 111111111.
 | 5000   | 26.50    | 22.01     | 14.00     | 9.7450    |
 | 10000  | 96.22    | 73.67     | 45.36     | 28.6050   |
 
-Let's graph these:
+We can graph time as function of number of particles or number of threads:
 
 ![Run time for different number of threads as a function of the number of particles](t_n.png)
 
